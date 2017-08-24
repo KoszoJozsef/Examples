@@ -5,7 +5,7 @@
  * compliance with  the terms of the License at:
  * http://java.net/projects/javaeetutorial/pages/BerkeleyLicense
  */
-package com.forest.shipment.web;
+package com.forest.web;
 
 import java.io.Serializable;
 import java.util.Locale;
@@ -17,7 +17,7 @@ import javax.inject.Named;
 @SessionScoped
 public class LocaleBean implements Serializable {
     
-    private static final long serialVersionUID = -5322261872682904868L;
+    private static final long serialVersionUID = -4341604693599426607L;
 
     /**
      * Creates a new instance of LocaleBean

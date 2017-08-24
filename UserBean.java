@@ -5,7 +5,7 @@
  * compliance with  the terms of the License at:
  * http://java.net/projects/javaeetutorial/pages/BerkeleyLicense
  */
-package com.forest.shipment.session;
+package com.forest.ejb;
 
 import com.forest.entity.Customer;
 import com.forest.entity.Person;
@@ -20,7 +20,7 @@ import javax.persistence.Query;
  */
 @Stateless
 public class UserBean extends AbstractFacade<Customer> {
-    
+
     @PersistenceContext(unitName="forestPU")
     private EntityManager em;
 
@@ -28,17 +28,38 @@ public class UserBean extends AbstractFacade<Customer> {
     protected EntityManager getEntityManager() {
         return em;
     }
-    
+
+    /**
+     * Create a new user verifying if the user already exists
+     * TODO: Create custom exceptions ?
+     * @param customer
+     * @return 
+     */
+    public boolean createUser(Customer customer) {
+
+        // check if user exists
+        if (getUserByEmail(customer.getEmail()) == null) {
+            super.create(customer);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public Person getUserByEmail(String email) {
         Query createNamedQuery = getEntityManager().createNamedQuery("Person.findByEmail");
-        
+
         createNamedQuery.setParameter("email", email);
-        
-        return (Person) createNamedQuery.getSingleResult();
+
+        if (createNamedQuery.getResultList().size() > 0) {
+            return (Person) createNamedQuery.getSingleResult();
+        }
+        else {
+            return null;
+        }
     }
-    
+
     public UserBean() {
         super(Customer.class);
     }
-
 }

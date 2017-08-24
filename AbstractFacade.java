@@ -5,7 +5,7 @@
  * compliance with  the terms of the License at:
  * http://java.net/projects/javaeetutorial/pages/BerkeleyLicense
  */
-package com.forest.shipment.session;
+package com.forest.ejb;
 
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -16,10 +16,14 @@ import javax.persistence.criteria.CriteriaQuery;
  *
  * @author markito
  */
-public abstract class AbstractFacade<T> {
-    private final Class<T> entityClass;
+public abstract class AbstractFacade<T>  {
+    private Class<T> entityClass;
+    
+    public AbstractFacade() {
+        
+    }
 
-    public AbstractFacade(Class<T> entityClass) {
+    public AbstractFacade(final Class<T> entityClass) {
         this.entityClass = entityClass;
     }
 

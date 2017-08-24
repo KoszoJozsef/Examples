@@ -5,13 +5,12 @@
  * compliance with  the terms of the License at:
  * http://java.net/projects/javaeetutorial/pages/BerkeleyLicense
  */
-package com.forest.shipment.web;
+package com.forest.web;
 
 import com.forest.entity.Groups;
 import com.forest.entity.Person;
 import com.forest.qualifiers.LoggedIn;
-import com.forest.shipment.session.UserBean;
-import com.forest.shipment.web.util.JsfUtil;
+import com.forest.web.util.JsfUtil;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,27 +25,33 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 /**
- * UserController is an authorization controller responsible 
- * for user login/logout actions
+ *
  * @author markito
  */
 @Named(value = "userController")
 @SessionScoped
 public class UserController implements Serializable {
     
-    private static final long serialVersionUID = -7440104826420270291L;
-    
-    @Inject
-    ShippingBean adapter;
-    
+    private static final String BUNDLE = "bundles.Bundle";
+    private static final long serialVersionUID = -8851462237612818158L;
+
     Person user;
     @EJB
-    private UserBean ejbFacade;
+    private com.forest.ejb.UserBean ejbFacade;
     private String username;
     private String password;
+    @Inject
+    CustomerController customerController;
 
     /**
-     * Login method based on <code>HttpServletRequest</code> and security realm
+     * Creates a new instance of Login
+     */
+    public UserController() {
+    }
+
+    /**
+     * Login method based on
+     * <code>HttpServletRequest</code> and security realm
      */
     public String login() {
         FacesContext context = FacesContext.getCurrentInstance();
@@ -55,64 +60,54 @@ public class UserController implements Serializable {
 
         try {
             request.login(this.getUsername(), this.getPassword());
-            
+
+            JsfUtil.addSuccessMessage(JsfUtil.getStringFromBundle(BUNDLE, "Login_Success"));
 
             this.user = ejbFacade.getUserByEmail(getUsername());
             this.getAuthenticatedUser();
 
-            if (isAdmin(user)) {
+            if (isAdmin()) {
                 result = "/admin/index";
-                JsfUtil.addSuccessMessage("Login Success! Welcome back!");
-
             } else {
-                 JsfUtil.addErrorMessage("You're not a system administrator and cannot access this page.");
-                 result = this.logout();
+                result = "/index";
             }
-            
+
         } catch (ServletException ex) {
             Logger.getLogger(UserController.class.getName()).log(Level.SEVERE, null, ex);
-            
-            //TODO: add message to resources bundle
-            JsfUtil.addErrorMessage("Invalid user or password. Login invalid!");
-            result = "/login";
+            JsfUtil.addErrorMessage(JsfUtil.getStringFromBundle(BUNDLE, "Login_Failed"));
+
+            result = "login";
         }
-        
+
         return result;
     }
-    
-    public boolean isAdmin(Person user) {   
-        for (Groups g : user.getGroupsList()) {
-                if (g.getName().equals("ADMINS")) {
-                    return true;
-                }
-            }
-        return false;
-    }
-    
+
     public String logout() {
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+        
         try {
             this.user = null;
             
-            ((HttpSession) context.getExternalContext().getSession(false)).invalidate();
             request.logout();
-            //TODO: add message to resources bundle
-            JsfUtil.addSuccessMessage("User successfully logged out! ");
+            // clear the session
+            ((HttpSession) context.getExternalContext().getSession(false)).invalidate();
             
+            JsfUtil.addSuccessMessage(JsfUtil.getStringFromBundle(BUNDLE, "Logout_Success"));
+
         } catch (ServletException ex) {
+
             Logger.getLogger(UserController.class.getName()).log(Level.SEVERE, null, ex);
-            //TODO: add message to resources bundle
-            JsfUtil.addErrorMessage("Critical error during logout process.");
-        } 
-        
-        return "/index";
+            JsfUtil.addErrorMessage(JsfUtil.getStringFromBundle(BUNDLE, "Logout_Failed"));
+        } finally {
+            return "/index";
+        }
     }
 
     /**
      * @return the ejbFacade
      */
-    public UserBean getEjbFacade() {
+    public com.forest.ejb.UserBean getEjbFacade() {
         return ejbFacade;
     }
 
@@ -122,10 +117,27 @@ public class UserController implements Serializable {
         return user;
     }
 
-    public boolean isLogged() {        
-        return getUser() == null ? false : true;
+    public boolean isLogged() {
+        return (getUser() == null) ? false : true;
     }
-    
+
+    public boolean isAdmin() {
+        for (Groups g : user.getGroupsList()) {
+            if (g.getName().equals("ADMINS")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String goAdmin() {
+        if (isAdmin()) {
+            return "/admin/index";
+        } else {
+            return "index";
+        }
+    }
+
     /**
      * @return the username
      */
